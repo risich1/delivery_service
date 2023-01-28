@@ -9,13 +9,14 @@ class Response {
         "Content-Type" => "application/json; charset=utf-8"
     ];
 
-    protected array $body = [];
+    protected array|\stdClass $body = [];
 
-    public function __construct(array $body = [], array $headers = [], int $statusCode = 200)
+    public function __construct(array|\stdClass|string $body = [], array $headers = [], int $statusCode = 200)
     {
         $this->statusCode = $statusCode;
         if ($headers) $this->headers = $headers;
-        if ($body) $this->body = $body;
+
+        if ($body) $this->body = is_string($body) ? ['message' => $body] : $body;
     }
 
     public function getHeaders(): array
@@ -44,7 +45,7 @@ class Response {
         return $this;
     }
 
-    public function getBody(): array
+    public function getBody(): array| \stdClass
     {
         return $this->body;
     }

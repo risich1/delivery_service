@@ -2,14 +2,20 @@
 
 namespace App\Repository;
 
-use App\DB;
+use App\Entity\Entity;
+use App\Interface\IRepository;
+use App\Interface\ISource;
 
-class Repository  {
+abstract class Repository implements IRepository {
 
-    protected DB $source;
+    protected ISource $source;
     protected string $table;
+    protected string $getQuery;
+    protected string $entity;
 
-    public function __construct(DB $source) {
+    public function __construct(ISource $source, string $table) {
+        $this->table = $table;
+        $this->getQuery = "SELECT * FROM {$this->table}";
         $this->source = $source;
     }
 
@@ -17,8 +23,17 @@ class Repository  {
         $this->source->create($this->table, $data);
     }
 
-    public function update(array $data, string $conditions = ''): void {
+    public function update(array $data, array $conditions): void {
         $this->source->update($this->table, $data, $conditions);
+    }
+
+    public function find(array $conditions = []): array {
+        $query = $this->getQuery;
+        return $this->source->get($query, $conditions);
+    }
+
+    protected function dataToEntity(array $data): Entity {
+        return new $this->entity($data);
     }
 
 }

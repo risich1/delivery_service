@@ -4,8 +4,9 @@ namespace App\Http\Handlers\Middleware;
 
 use App\Http\Request\Request;
 use App\Http\Response\Response;
+use App\Interface\IRequest;
 
-class Middleware {
+abstract class Middleware {
 
     private ?Middleware $nextMiddleware;
 
@@ -15,7 +16,7 @@ class Middleware {
         return $nextMiddleware;
     }
 
-    public function process(Request $request): Request
+    public function process(IRequest $request): IRequest
     {
         if ($this->nextMiddleware instanceof Middleware) {
             return $this->nextMiddleware->process($request);

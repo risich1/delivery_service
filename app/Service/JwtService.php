@@ -18,8 +18,9 @@ class JwtService {
             'iss'  => $_ENV['PROJECT_NAME'],
             'nbf'  => $issuedAt->getTimestamp(),
             'exp'  => $expire->getTimestamp(),
-            'data' => [
-                'email' => $user->email,
+            'user' => [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
                 'roles' => $user->roles
             ]
         ];
@@ -27,14 +28,14 @@ class JwtService {
         return JWT::encode($data, $_ENV['JWT_SECRET'], 'HS256');
     }
 
-    public static function validateJWT($jwt): bool {
+    public static function validateJWT($jwt): bool|\stdClass {
         $key = new Key($_ENV['JWT_SECRET'], 'HS256');
         $token = JWT::decode($jwt, $key);
         $now = new DateTimeImmutable();
         $nowT = $now->getTimestamp();
         $invalidToken = $token->iss != $_ENV['PROJECT_NAME'] || $token->nbf > $nowT || $token->exp < $nowT;
 
-        return !$invalidToken;
+        return !$invalidToken ? $token->user: false;
     }
 
 }

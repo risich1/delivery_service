@@ -7,5 +7,6 @@ use App\Repository\Repository;
 class OrderRepository extends Repository {
 
     protected string $table = 'orders';
-    
+
+
 }

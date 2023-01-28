@@ -7,30 +7,26 @@ use App\Http\Handlers\ResponseHandler;
 use App\Http\Request\Request;
 use App\Http\Handlers\Middleware\Middleware;
 //use App\Http\Handlers\Handler;
+use App\Http\Response\Response;
 use Psr\Http\Message\RequestInterface;
 
 /**
- * @method get(string $string, \Closure $handlers, array $middlewares)
- * @method post(string $string, \Closure $handlers, array $middlewares)
+ * @method get(string $string, \Closure $handlers, array $middlewares,  $request)
+ * @method post(string $string, \Closure $handlers, array $middlewares, $request)
  */
 class Router {
     private array $handlers;
     private array $middlewares;
-    private Request $request;
+    private array $requests;
     private array $httpMethods = [
         'GET', 'PUT', 'POST', 'DELETE'
     ];
-
-    public function __construct(Request $request)
-    {
-        $this->request = $request;
-    }
 
     public function __call($name, $args)
     {
         $method = strtoupper($name);
         if (in_array($method, $this->httpMethods)) {
-            [$url, $handler, $middlewares] = $args;
+            [$url, $handler, $middlewares, $request] = $args;
 
             if ($handler instanceof \Closure) {
                 $this->handlers["$method::$url"] = $handler;
@@ -41,18 +37,22 @@ class Router {
                     $this->middlewares["$method::$url"][] = $middleware;
                 }
             }
+
+            $this->requests["$method::$url"] = $request instanceof Request ? $request : new Request;
+
         }
     }
 
     public function run(): void {
+        $request = new Request;
         foreach ($this->handlers as $key => $handler) {
             [$method, $url] = explode('::', $key);
-            if ($method !== $this->request->getMethod()) {
+            if ($method !== $request->getMethod()) {
                 continue;
             }
 
             $urlPeaces = explode('/', $url);
-            $rUrl = $this->request->getUri();
+            $rUrl = $request->getUri();
             $rUrlPeaces = explode('/', $rUrl);
             $rUrlParams = [];
             $urlParams = array_filter($urlPeaces, function ($peace) {
@@ -67,7 +67,7 @@ class Router {
             }
 
             if ($url === $rUrl) {
-                $response = (new RequestHandler($handler, $this->middlewares[$key] ?? [], $rUrlParams))->handle($this->request);
+                $response = (new RequestHandler($handler, $this->middlewares[$key] ?? [], $rUrlParams))->handle($this->requests[$key]);
                 (new ResponseHandler($response))->handle();
             }
 

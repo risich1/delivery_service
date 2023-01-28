@@ -2,15 +2,28 @@
 
 namespace App\Http\Handlers\Middleware;
 
-use App\Http\Request\AuthRequest;
+use App\Exceptions\InvalidAuthException;
+use App\Http\Request\LoginRequest;
 use App\Http\Request\Request;
 use App\Http\Response\Response;
+use App\Service\JwtService;
+use http\Exception;
+use App\Interface\IRequest;
 
 class AuthMiddleware extends Middleware {
 
-    public function process(Request $request): Request
+    /**
+     * @throws InvalidAuthException
+     */
+    public function process(IRequest $request): IRequest
     {
-        $request->setUser(['uname' => 'name123']);
+        $user = JwtService::validateJWT($request->getBearerToken());
+
+        if (!$user) {
+            throw new InvalidAuthException();
+        }
+
+        $request->setUser($user);
         return $request;
     }
 

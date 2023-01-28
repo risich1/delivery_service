@@ -1,10 +1,11 @@
 <?php
 
-namespace App;
+namespace App\Source;
 
-use PDO, PDOStatement;
+use App\Interface\ISource;
+use PDO;
 
-class DB
+class DB implements ISource
 {
 
     private PDO $pdo;
@@ -28,7 +29,8 @@ class DB
         return $this->pdo->query($query);
     }
 
-    public function get(string $query): array {
+    public function get(string $query, array $conditions = []): array {
+        $query = $this->buildQueryWithConditions($query, $conditions);
         $stmt = $this->pdo->query($query);
         $result = [];
 
@@ -38,6 +40,22 @@ class DB
         }
 
         return $result;
+    }
+
+    protected function buildQueryWithConditions(string $query, array $conditions): string {
+        if (count($conditions)) {
+            $query .= ' WHERE ';
+            foreach ($conditions as $key => $condition) {
+                if ($key > 0 && count($conditions) > 1) {
+                    $query .= ' AND ';
+                }
+                if (isset($condition[0], $condition[1], $condition[2])) {
+                    $query .= "$condition[0] $condition[1] '$condition[2]'";
+                }
+            }
+        }
+
+        return $query;
     }
 
     protected function pdoSet(array $data): string {
@@ -53,16 +71,21 @@ class DB
         $sql = "INSERT INTO $table SET ".$this->pdoSet($data);
         $stm = $this->pdo->prepare($sql);
         $stm->execute(array_values($data));
-        return $this->pdo->lastInsertId ();
+        return $this->pdo->lastInsertId();
     }
 
-    public function update(string $table, array $data, string $conditions = ''): void {
+    public function update(string $table, array $data, array $conditions = []): void {
         $query = "UPDATE $table SET ".$this->pdoSet($data);
+
         if ($conditions) {
-            $query .= " WHERE $conditions";
+            $query = $this->buildQueryWithConditions($query, $conditions);
         }
         $stm = $this->pdo->prepare($query);
         $stm->execute(array_values($data));
     }
 
+    public function delete(string $table, array $conditions)
+    {
+        // TODO: Implement delete() method.
+    }
 }

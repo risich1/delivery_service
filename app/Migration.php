@@ -2,11 +2,13 @@
 
 namespace App;
 
+use App\Interface\ISource;
+
 class Migration {
 
-    protected DB $db;
+    protected ISource $db;
 
-    public function __construct(DB $db)
+    public function __construct(ISource $db)
     {
         $this->db = $db;
     }

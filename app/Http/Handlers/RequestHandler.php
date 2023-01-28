@@ -3,8 +3,8 @@
 namespace App\Http\Handlers;
 
 use App\Http\Handlers\Middleware\Middleware;
-use App\Http\Request\Request;
 use App\Http\Response\Response;
+use App\Interface\IRequest;
 
 class RequestHandler {
 
@@ -18,13 +18,18 @@ class RequestHandler {
         $this->params = $params;
     }
 
-    public function handle(Request $request): Response {
-        return ($this->callable)($this->processMiddleware($request), ...$this->params);
+    public function handle(IRequest $request): Response {
+        try {
+            $request->validate();
+            return ($this->callable)($this->processMiddleware($request), ...$this->params);
+        } catch (\Exception $e) {
+            return new Response(['error' => $e->getMessage()], [], $e->getCode());
+        }
     }
 
-    protected function processMiddleware(Request $request): null|Response|Request {
+    protected function processMiddleware(IRequest $request): null|Response|IRequest {
         $chain = $this->buildMiddlewareChain();
-        $resultRequest = null;
+        $resultRequest = $request;
         if ($chain instanceof Middleware) {
             $resultRequest = $chain->process($request);
         }
