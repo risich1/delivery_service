@@ -2,7 +2,9 @@
 
 namespace App;
 
+use App\Entity\User;
 use App\Interface\ISource;
+use Faker\Factory;
 
 class Seeder {
 
@@ -14,34 +16,44 @@ class Seeder {
     }
 
     public function run(): void {
+        $faker = Factory::create();
 
-        $roleIds = [];
+        for ($i = 0; $i < 30; $i++) {
+            $coords = $faker->localCoordinates();
+            $address = [
+                'title' => $faker->streetAddress(),
+                'lat' => (string) $coords['latitude'],
+                'lng' => (string) $coords['longitude']
+            ];
 
-        foreach (['seller', 'customer', 'courier'] as $role) {
-            $roleIds[] = $this->db->create('roles', ['role_name' => $role]);
+            $this->db->create('addresses', $address);
         }
 
-        $users = [
-            [
-                'full_name' => 'Seller Sellerovich',
-                'email' => 'seller@seller.com',
-                'password' => password_hash("seller_password", PASSWORD_BCRYPT),
-            ],
-            [
-                'full_name' => 'Customer Customerovich',
-                'email' => 'customer@customer.com',
-                'password' => password_hash("customer_password", PASSWORD_BCRYPT)
-            ],
-            [
-                'full_name' => 'Courier Courierovich',
-                'email' => 'courier@courier.com',
-                'password' => password_hash("courier_password", PASSWORD_BCRYPT)
-            ]
-        ];
+        $sellerIds = [];
 
-        foreach ($users as $key => $user) {
-            $uid = $this->db->create('users', $user);
-            $this->db->create('users_roles', ['user_id' => $uid, 'role_id' => $roleIds[$key]]);
+        foreach ([User::COURIER_ROLE, User::CUSTOMER_ROLE, User::SELLER_ROLE] as $key => $role) {
+            for ($i = 0; $i < 10; $i++) {
+                $user =  [
+                    'full_name' => "{$faker->lastName()} {$faker->firstName()} ($role)",
+                    'phone' => '+37533' . rand(1000000, 9999999),
+                    'u_role' => $role,
+                    'password' => 'password123'
+                ];
+
+                if ($role === User::SELLER_ROLE) {
+                    $user['default_address_id'] = rand(1,30);
+                }
+
+                $id = $this->db->create('users', $user);
+
+                if ($role === User::SELLER_ROLE) {
+                    $sellerIds[] = $id;
+                }
+            }
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->db->create('products', ['seller_id' => $sellerIds[$i], 'name' => "Product {$faker->numerify()}"]);
         }
 
     }

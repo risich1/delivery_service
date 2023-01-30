@@ -6,10 +6,46 @@ use ReflectionClass;
 
 class User extends Entity {
 
-    protected int $id;
+    public const CUSTOMER_ROLE = 'customer',
+                 SELLER_ROLE = 'seller',
+                 COURIER_ROLE = 'courier';
+
     protected string $fullName;
-    protected string $email;
+    protected string $phone;
     protected string $password;
+    protected string $uRole;
+
+    /**
+     * @return string
+     */
+    public function getUrole(): string
+    {
+        return $this->uRole;
+    }
+
+    /**
+     * @param string $role
+     */
+    public function setUrole(string $role): void
+    {
+        $this->uRole = $role;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhone(): string
+    {
+        return $this->phone;
+    }
+
+    /**
+     * @param string $phone
+     */
+    public function setPhone(string $phone): void
+    {
+        $this->phone = $phone;
+    }
 
     /**
      * @return string
@@ -24,24 +60,7 @@ class User extends Entity {
      */
     public function setPassword(string $password): void
     {
-        $this->password = $password;
-    }
-    public array $roles;
-
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
-     * @param int $id
-     */
-    public function setId(int $id): void
-    {
-        $this->id = $id;
+        $this->password = password_hash($password, PASSWORD_BCRYPT);
     }
 
     /**
@@ -58,38 +77,6 @@ class User extends Entity {
     public function setFullName(string $fullName): void
     {
         $this->fullName = $fullName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEmail(): string
-    {
-        return $this->email;
-    }
-
-    /**
-     * @param string $email
-     */
-    public function setEmail(string $email): void
-    {
-        $this->email = $email;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRoles(): array
-    {
-        return $this->roles;
-    }
-
-    /**
-     * @param array $roles
-     */
-    public function setRoles(array $roles): void
-    {
-        $this->roles = $roles;
     }
 
 

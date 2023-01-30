@@ -3,25 +3,23 @@
 namespace App\Service;
 
 use App\Exceptions\InvalidAuthException;
-use App\Interface\IRepository;
 use App\Repository\UserRepository;
 
 class AuthService {
 
     protected UserRepository $repository;
 
-    public function __construct(UserRepository $repository)
-    {
+    public function __construct(UserRepository $repository) {
         $this->repository = $repository;
     }
 
     /**
      * @throws InvalidAuthException
      */
-    public function login($email, $password): string {
-        $user = $this->repository->getByEmail($email);
+    public function login(string $phone, string $password): string {
+        $user = $this->repository->getByPhone($phone);
 
-        if (!password_verify($password, $user->getPassword())) {
+        if (!$user || !password_verify($password, $user->getPassword())) {
             throw new InvalidAuthException;
         }
 

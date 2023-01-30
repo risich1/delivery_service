@@ -19,12 +19,17 @@ class RequestHandler {
     }
 
     public function handle(IRequest $request): Response {
-        try {
-            $request->validate();
-            return ($this->callable)($this->processMiddleware($request), ...$this->params);
-        } catch (\Exception $e) {
-            return new Response(['error' => $e->getMessage()], [], $e->getCode());
-        }
+//        try {
+//            $request->validate();
+//            return ($this->callable)($this->processMiddleware($request), ...$this->params);
+//        } catch (\Exception $e) {
+//            return new Response(['error' => $e->getMessage()], [], $e->getCode());
+//        } catch (\Error $e) {
+//            return new Response(['error' => $e->getMessage()], [], $e->getCode());
+//        }
+
+        $request->validate();
+        return ($this->callable)($this->processMiddleware($request), ...$this->params);
     }
 
     protected function processMiddleware(IRequest $request): null|Response|IRequest {

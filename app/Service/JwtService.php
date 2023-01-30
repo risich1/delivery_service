@@ -20,22 +20,22 @@ class JwtService {
             'exp'  => $expire->getTimestamp(),
             'user' => [
                 'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'roles' => $user->roles
+                'phone' => $user->getPhone(),
+                'u_role' => $user->getUrole()
             ]
         ];
 
         return JWT::encode($data, $_ENV['JWT_SECRET'], 'HS256');
     }
 
-    public static function validateJWT($jwt): bool|\stdClass {
+    public static function validateJWT(string $jwt): bool|User {
         $key = new Key($_ENV['JWT_SECRET'], 'HS256');
         $token = JWT::decode($jwt, $key);
         $now = new DateTimeImmutable();
         $nowT = $now->getTimestamp();
         $invalidToken = $token->iss != $_ENV['PROJECT_NAME'] || $token->nbf > $nowT || $token->exp < $nowT;
 
-        return !$invalidToken ? $token->user: false;
+        return !$invalidToken ? new User((array) $token->user): false;
     }
 
 }

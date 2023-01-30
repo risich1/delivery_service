@@ -15,12 +15,13 @@ abstract class Repository implements IRepository {
 
     public function __construct(ISource $source, string $table) {
         $this->table = $table;
-        $this->getQuery = "SELECT * FROM {$this->table}";
+        $tablePrefix = mb_substr($table, 0, 1);
+        $this->getQuery = "SELECT * FROM {$this->table} {$tablePrefix}";
         $this->source = $source;
     }
 
-    public function create(array $data): void {
-        $this->source->create($this->table, $data);
+    public function create(Entity $entity): void {
+        $this->source->create($this->table, $entity->toArray());
     }
 
     public function update(array $data, array $conditions): void {
@@ -29,7 +30,16 @@ abstract class Repository implements IRepository {
 
     public function find(array $conditions = []): array {
         $query = $this->getQuery;
-        return $this->source->get($query, $conditions);
+        $result = $this->source->get($query, $conditions);
+
+        foreach ($result as &$item) {
+            if (!$item['id']) {
+                return [];
+            }
+            $item = $this->dataToEntity($item);
+        }
+
+        return $result;
     }
 
     protected function dataToEntity(array $data): Entity {

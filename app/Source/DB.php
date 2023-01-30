@@ -50,7 +50,16 @@ class DB implements ISource
                     $query .= ' AND ';
                 }
                 if (isset($condition[0], $condition[1], $condition[2])) {
-                    $query .= "$condition[0] $condition[1] '$condition[2]'";
+                    $value = "'$condition[2]'";
+                    if (is_array($condition[2])) {
+                        $valueArray = $condition[2];
+                        foreach ($valueArray as &$item) {
+                            $item = "'$item'";
+                        }
+                        $value = '(' . implode(',', $valueArray) . ')';
+                    }
+
+                    $query .= "$condition[0] $condition[1] $value";
                 }
             }
         }
@@ -66,9 +75,37 @@ class DB implements ISource
         }
         return substr($set, 0, -2);
     }
+//
+//    protected function pdoSetMulti(array $data): string {
+//
+//        foreach ($data as $key => $dat) {
+//           $res = [];
+//
+//           foreach ($dat as $datKey => $v) {
+//              $res["$datKey"]
+//           }
+//        }
+//    }
 
     public function create(string $table, array $data): int|null {
         $sql = "INSERT INTO $table SET ".$this->pdoSet($data);
+//        if (is_array($data[0])) {
+//            $sql = "INSERT INTO $table ({implode(',', $data[0])}) VALUES ";
+//
+//            foreach ($data as $key => $dat) {
+//                $iValues = array_values($dat);
+//                foreach ($iValues as &$iValue) {
+//                    $iValue = "'$iValue'";
+//                }
+//                $iValues = implode(',', $iValues);
+//                $sql .= "( $iValues )";
+//
+//                if ($key < count($data) - 1) {
+//                    $sql .= ', ';
+//                }
+//            }
+//        }
+
         $stm = $this->pdo->prepare($sql);
         $stm->execute(array_values($data));
         return $this->pdo->lastInsertId();

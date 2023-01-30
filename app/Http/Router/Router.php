@@ -6,13 +6,11 @@ use App\Http\Handlers\RequestHandler;
 use App\Http\Handlers\ResponseHandler;
 use App\Http\Request\Request;
 use App\Http\Handlers\Middleware\Middleware;
-//use App\Http\Handlers\Handler;
-use App\Http\Response\Response;
-use Psr\Http\Message\RequestInterface;
 
 /**
  * @method get(string $string, \Closure $handlers, array $middlewares,  $request)
  * @method post(string $string, \Closure $handlers, array $middlewares, $request)
+ * @method put(string $string, \Closure $handlers, array $middlewares, $request)
  */
 class Router {
     private array $handlers;

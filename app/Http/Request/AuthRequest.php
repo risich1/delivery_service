@@ -6,15 +6,15 @@ use App\Entity\User;
 
 class AuthRequest extends Request {
 
-    protected \stdClass $user;
+    protected User $user;
     protected array $requireBodyFields = [];
     protected array $requireHeaders = ['Authorization'];
 
-    public function getUser(): \stdClass {
+    public function getUser(): User {
         return $this->user;
     }
 
-    public function setUser(\stdClass $user): self {
+    public function setUser(User $user): self {
         $this->user = $user;
         return $this;
     }

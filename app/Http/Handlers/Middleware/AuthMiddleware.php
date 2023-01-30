@@ -3,11 +3,7 @@
 namespace App\Http\Handlers\Middleware;
 
 use App\Exceptions\InvalidAuthException;
-use App\Http\Request\LoginRequest;
-use App\Http\Request\Request;
-use App\Http\Response\Response;
 use App\Service\JwtService;
-use http\Exception;
 use App\Interface\IRequest;
 
 class AuthMiddleware extends Middleware {
@@ -25,10 +21,6 @@ class AuthMiddleware extends Middleware {
 
         $request->setUser($user);
         return $request;
-    }
-
-    protected function authUser() {
-
     }
 
 }

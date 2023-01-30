@@ -13,30 +13,14 @@ class UserRepository extends Repository {
 
     public function __construct(ISource $source) {
         parent::__construct($source, $this->table);
-
-        $this->getQuery = "
-            SELECT u.id, u.email, u.password, u.full_name as fullName, GROUP_CONCAT(r.role_name, ',') as roles FROM {$this->table} u 
-            JOIN users_roles ur ON ur.user_id = u.id 
-            JOIN roles r ON r.id = ur.role_id
-        ";
     }
 
-    public function getByEmail(string $email): Entity {
+    public function getByPhone(string $phone): ?User {
         $result = $this->find([
-            ['u.email', '=', $email]
+            ['u.phone', '=', $phone]
         ]);
 
-//        print_r(array_shift($result));die;
-
-        return $this->dataToEntity(array_shift($result));
-    }
-
-    public function getById(string $email): User {
-        $result = $this->find([
-            ['u.id', '=', $email]
-        ]);
-
-        return $this->dataToEntity(array_shift($result));
+        return array_shift($result);
     }
 
 }
