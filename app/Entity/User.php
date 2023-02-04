@@ -14,6 +14,23 @@ class User extends Entity {
     protected string $phone;
     protected string $password;
     protected string $uRole;
+    protected ?string $defaultAddressId;
+
+    /**
+     * @return ?string
+     */
+    public function getDefaultAddressId(): ?string
+    {
+        return $this->defaultAddressId;
+    }
+
+    /**
+     * @param ?string $defaultAddressId
+     */
+    public function setDefaultAddressId(?string $defaultAddressId): void
+    {
+        $this->defaultAddressId = $defaultAddressId;
+    }
 
     /**
      * @return string
@@ -60,7 +77,7 @@ class User extends Entity {
      */
     public function setPassword(string $password): void
     {
-        $this->password = password_hash($password, PASSWORD_BCRYPT);
+        $this->password = $password;
     }
 
     /**

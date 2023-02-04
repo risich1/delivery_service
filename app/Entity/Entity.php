@@ -2,9 +2,10 @@
 
 namespace App\Entity;
 
+use App\Interface\IEntity;
 use ReflectionClass;
 
-class Entity {
+class Entity implements IEntity {
 
     protected int $id;
 
@@ -16,7 +17,7 @@ class Entity {
             foreach ($reflection->getProperties() as $property) {
                 if ($property->getName() === $field) {
                     if ($property->getType() == 'array' && !is_array($value)) {
-                        $value = explode(',', $value);
+                        $value = $value ? explode(',', $value) : [];
                     }
                     $setter = 'set' . ucfirst($field);
                     $this->{$setter}($value);
@@ -27,7 +28,6 @@ class Entity {
 
     public function toArray(): array {
         $reflection = new ReflectionClass(static::class);
-
         $result = [];
         foreach ($reflection->getProperties() as $property) {
             $getter = 'get' . ucfirst($property->getName());

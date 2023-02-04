@@ -13,6 +13,24 @@ class Request implements IRequest {
     protected string $requestUri;
     protected array $requireBodyFields = [];
     protected array $requireHeaders = [];
+    protected string $clientIp;
+    protected array $uriParams;
+
+    /**
+     * @return array
+     */
+    public function getUriParams(): array
+    {
+        return $this->uriParams;
+    }
+
+    /**
+     * @param array $uriParams
+     */
+    public function setUriParams(array $uriParams): void
+    {
+        $this->uriParams = $uriParams;
+    }
 
     public function __construct()
     {
@@ -20,6 +38,7 @@ class Request implements IRequest {
         $this->method = $_SERVER['REQUEST_METHOD'];
         $this->body = json_decode(file_get_contents('php://input'), TRUE) ?? [];
         $this->requestUri = $_SERVER['REQUEST_URI'];
+        $this->clientIp = $_SERVER['REMOTE_ADDR'];
     }
 
     /**
@@ -89,6 +108,11 @@ class Request implements IRequest {
     public function getUri(): string
     {
         return $this->requestUri;
+    }
+
+    public function getClientIp(): string
+    {
+        return $this->clientIp;
     }
 
 }

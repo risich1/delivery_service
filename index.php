@@ -2,87 +2,83 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use App\Http\Handlers\Middleware\AuthMiddleware;
-use App\Http\Handlers\Middleware\RateLimitMiddleware;
 use App\Http\Request\AuthRequest;
 use App\Http\Request\CalculateOrderRequest;
 use App\Http\Request\CreateOrderRequest;
 use App\Http\Request\LoginRequest;
 use App\Http\Request\Request;
+use App\Http\Request\SendOrderToCourierRequest;
 use App\Http\Response\Response;
 use App\Http\Router\Router;
 use App\Migration;
-use App\Repository\OrderRepository;
-use App\Repository\UserRepository;
 use App\Seeder;
-use App\Service\AuthService;
-use App\Service\OrderService;
-use App\Source\DB;
-
-session_start();
+use App\Container;
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-$db = new DB($_ENV['DB_HOST'], $_ENV['DB_NAME'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD']);
+$container = new Container;
 
-$orderRepository = new OrderRepository($db);
-$userRepository = new UserRepository($db);
-$orderService = new OrderService($orderRepository);
-$authService = new AuthService($userRepository);
+$orderService = $container->get('service.order');
+$authService = $container->get('service.auth');
+$userTransformer = $container->get('transformer.user');
+$addressTransformer = $container->get('transformer.address');
+$productTransformer = $container->get('transformer.product');
+$orderTransformer = $container->get('transformer.order');
+$shortOrderTransformer = $container->get('transformer.order_short');
+$authMiddleware = $container->get('middleware.auth');
+$rateLimitMiddleware = $container->get('middleware.rate_limit');
 
 $router = new Router;
 
-$seedHandler = function () use ($db) {
-    (new Seeder($db))->run();
-    return new Response(['message' => 'success']);
-};
-
 $loginHandler = function (LoginRequest $request) use ($authService) {
-    return new Response(['token' => $authService->login(...$request->getBody())]);
+    $body = $request->getBody();
+    return new Response(['token' => $authService->login($body['phone'], $body['password'])]);
 };
 
-$getOrderHandler = function (AuthRequest $request, $id) use ($orderService) {
+$getOrderHandler = function (AuthRequest $request, $id) use ($orderService, $orderTransformer) {
     $order = $orderService->getOrderById($id, $request->getUser());
-    return new Response(['order' => $order->toArray()]);
+    return new Response($orderTransformer->transform($order));
 };
 
-$getAllOrderHandler = function (AuthRequest $request) use ($orderService) {
-    return new Response($orderService->getOrderList($request->getUser()));
+$getAllOrderHandler = function (AuthRequest $request) use ($orderService, $shortOrderTransformer) {
+    $result = $orderService->getOrderList($request->getUser());
+    return new Response($shortOrderTransformer->transform($result));
 };
 
 $createOrderHandler = function (CreateOrderRequest $request) use ($orderService) {
     $orderService->createOrder($request->getBody());
-    return new Response(['message' => 'created'], [], 201);
+    return new Response('Order created', [], Response::HTTP_CREATED_CODE);
 };
 
 $calculateOrderHandler = function (CalculateOrderRequest $request) use ($orderService) {
-    return new Response(['cost' => $orderService->calculateCost(...$request->getBody())]);
+    $body = $request->getBody();
+    return new Response(['cost' => $orderService->calculateCost($body['point_a'], $body['point_b'])]);
 };
 
-$updateOrderHandler = function (AuthRequest $request, $id) {
-    return new Response($id);
+$migrateHandler = function () use ($container) {
+    (new Migration($container->get('db')))->run();
+    return new Response('Migrated');
 };
 
-$migrateHandler = function (Request $request) use ($db) {
-    (new Migration($db))->run();
-    return new Response(['message' => 'success']);
+$seedHandler = function () use ($container) {
+    (new Seeder($container->get('db')))->run();
+    return new Response('Seeded');
 };
 
+$sendToCourierHandler = function (SendOrderToCourierRequest $request, int $id) use ($orderService) {
+    $orderService->handOrderToCourier($id, $request->getUser(), $request->getBody()['courier_id']);
+    return new Response('Order has been handed');
+};
+
+$router->put('/api/order/$id/courier', $sendToCourierHandler, [$rateLimitMiddleware, $authMiddleware], new SendOrderToCourierRequest);
 $router->get('/api/migrate', $migrateHandler, [], new Request);
 $router->get('/api/seed', $seedHandler, [], new Request);
-$router->post('/api/order/calculate', $calculateOrderHandler,  [new AuthMiddleware], new AuthRequest);
-
-$router->get('/api/order', $getAllOrderHandler, [new AuthMiddleware], new AuthRequest);
-$router->get('/api/order/$id', $getOrderHandler, [new AuthMiddleware], new AuthRequest);
-$router->post('/api/order', $createOrderHandler, [new AuthMiddleware], new CreateOrderRequest);
-$router->put('/api/order/$id', $updateOrderHandler, [new AuthMiddleware], new AuthRequest);
-
-$router->post('/api/login', $loginHandler, [], new LoginRequest);
-
-
-//$router->get('/api/order/$id', $orderHandler, [new RateLimitMiddleware, new AuthMiddleware], new AuthRequest);
-
+$router->post('/api/order/calculate', $calculateOrderHandler,  [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
+$router->get('/api/order', $getAllOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
+$router->get('/api/order/$id', $getOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
+$router->post('/api/order', $createOrderHandler, [$rateLimitMiddleware, $authMiddleware], new CreateOrderRequest);
+$router->post('/api/login', $loginHandler, [$rateLimitMiddleware], new LoginRequest);
 
 $router->run();
 

@@ -52,7 +52,7 @@ class Migration {
         address_a_id INT(6) UNSIGNED NOT NULL,
         address_b_id INT(6) UNSIGNED NOT NULL,
         cost FLOAT(6) UNSIGNED,
-        status ENUM('approved','pending','success') DEFAULT 'pending' NOT NULL,
+        status ENUM('pending','approved','handed_courier', 'on_way', 'success') DEFAULT 'pending' NOT NULL,
         updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES users(id),
         FOREIGN KEY (seller_id) REFERENCES users(id),

@@ -6,6 +6,8 @@ class Order extends Entity {
 
     const STATUS_PENDING = 'pending',
           STATUS_APPROVED = 'approved',
+          STATUS_HANDED_COURIER = 'handed_courier',
+          STATUS_ON_WAY = 'on_way',
           STATUS_SUCCESS = 'success';
 
     protected int $customerId;

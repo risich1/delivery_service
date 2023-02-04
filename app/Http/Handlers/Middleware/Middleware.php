@@ -18,7 +18,7 @@ abstract class Middleware {
 
     public function process(IRequest $request): IRequest
     {
-        if ($this->nextMiddleware instanceof Middleware) {
+        if (isset($this->nextMiddleware) && $this->nextMiddleware instanceof Middleware) {
             return $this->nextMiddleware->process($request);
         }
 

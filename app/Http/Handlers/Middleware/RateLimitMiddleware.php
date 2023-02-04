@@ -2,21 +2,30 @@
 
 namespace App\Http\Handlers\Middleware;
 
-use App\Http\Request\LoginRequest;
-use App\Http\Request\Request;
-use App\Http\Response\Response;
-use App\RateLimiter;
-use App\Service\JwtService;
-use http\Exception;
+use App\Exceptions\RateExceededException;
 use App\Interface\IRequest;
+use App\Service\HttpService;
 
 class RateLimitMiddleware extends Middleware {
 
+    protected HttpService $http;
+
+    public function __construct(HttpService $http) {
+        $this->http = $http;
+    }
+
+    /**
+     * @throws RateExceededException
+     */
     public function process(IRequest $request): IRequest
     {
-        $rateLimiter = new RateLimiter($_SERVER["REMOTE_ADDR"]);
-        $rateLimiter->limitRequestsInMinutes(10, 1);
-        return $request;
+        $uriParamsStr = implode('_', $request->getUriParams());
+        $token = "{$request->getClientIp()}_{$request->getUri()}_{$uriParamsStr}";
+        if (!$this->http->isAllowByRateLimit($token)) {
+            throw new RateExceededException;
+        }
+
+        return parent::process($request);
     }
 
 }

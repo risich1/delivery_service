@@ -18,43 +18,38 @@ class Seeder {
     public function run(): void {
         $faker = Factory::create();
 
+        $users = [];
+        $addresses = [];
+        $products = [];
+
         for ($i = 0; $i < 30; $i++) {
             $coords = $faker->localCoordinates();
-            $address = [
+            $addresses[] = [
                 'title' => $faker->streetAddress(),
                 'lat' => (string) $coords['latitude'],
                 'lng' => (string) $coords['longitude']
             ];
-
-            $this->db->create('addresses', $address);
         }
 
-        $sellerIds = [];
-
-        foreach ([User::COURIER_ROLE, User::CUSTOMER_ROLE, User::SELLER_ROLE] as $key => $role) {
-            for ($i = 0; $i < 10; $i++) {
-                $user =  [
+        foreach ([User::SELLER_ROLE, User::COURIER_ROLE, User::CUSTOMER_ROLE] as $key => $role) {
+            for ($i = 0; $i < 3; $i++) {
+                $users[] =  [
                     'full_name' => "{$faker->lastName()} {$faker->firstName()} ($role)",
-                    'phone' => '+37533' . rand(1000000, 9999999),
+                    'phone' => '+3753355566' . $key . $i,
                     'u_role' => $role,
-                    'password' => 'password123'
+                    'password' => password_hash('password123', PASSWORD_BCRYPT),
+                    'default_address_id' => $role === User::SELLER_ROLE ? ($i + 1) : NULL
                 ];
-
-                if ($role === User::SELLER_ROLE) {
-                    $user['default_address_id'] = rand(1,30);
-                }
-
-                $id = $this->db->create('users', $user);
-
-                if ($role === User::SELLER_ROLE) {
-                    $sellerIds[] = $id;
-                }
             }
         }
 
-        for ($i = 0; $i < 10; $i++) {
-            $this->db->create('products', ['seller_id' => $sellerIds[$i], 'name' => "Product {$faker->numerify()}"]);
+        for ($i = 0; $i < 30; $i++) {
+            $products[] = ['seller_id' => rand(1,3), 'name' => "Product {$i}"];
         }
 
+        $this->db->createBatch('addresses', $addresses);
+        $this->db->createBatch('users', $users);
+        $this->db->createBatch('products', $products);
     }
+
 }

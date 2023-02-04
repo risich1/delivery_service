@@ -20,14 +20,11 @@ class OrderRepository extends Repository {
         $data = $order->toArray();
         unset($data['products']);
         $orderId = $this->source->create($this->table, $data);
+        $products = [];
         foreach ($order->getProducts() as $product) {
-            $this->source->create($this->ordersProductsTable, ['product_id' => (int) $product, 'order_id' => $orderId]);
+            $products[] = ['product_id' => (int) $product, 'order_id' => $orderId];
         }
-    }
-
-    public function find(array $conditions = []): array
-    {
-        return parent::find($conditions);
+        $this->source->createBatch($this->ordersProductsTable, $products);
     }
 
     public function getByRole(int $uid, string $role, int $id = 0): array|Order {
@@ -37,7 +34,9 @@ class OrderRepository extends Repository {
         if ($id) {
             $conditions[] = ['o.id', '=', $id];
         }
+
         $result = $this->find($conditions);
+
         return $id && $result ? array_shift($result) : $result;
     }
 

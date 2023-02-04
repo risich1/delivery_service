@@ -6,6 +6,7 @@ use App\Http\Handlers\RequestHandler;
 use App\Http\Handlers\ResponseHandler;
 use App\Http\Request\Request;
 use App\Http\Handlers\Middleware\Middleware;
+use App\Http\Response\Response;
 
 /**
  * @method get(string $string, \Closure $handlers, array $middlewares,  $request)
@@ -35,14 +36,13 @@ class Router {
                     $this->middlewares["$method::$url"][] = $middleware;
                 }
             }
-
-            $this->requests["$method::$url"] = $request instanceof Request ? $request : new Request;
-
+            $this->requests["$method::$url"] = $request;
         }
     }
 
     public function run(): void {
         $request = new Request;
+        $response = new Response('Method not allowed', [], Response::HTTP_METHOD_NOT_ALLOWED_CODE);
         foreach ($this->handlers as $key => $handler) {
             [$method, $url] = explode('::', $key);
             if ($method !== $request->getMethod()) {
@@ -50,25 +50,33 @@ class Router {
             }
 
             $urlPeaces = explode('/', $url);
+            $urlPeaces = array_filter($urlPeaces, fn($p) => $p);
             $rUrl = $request->getUri();
             $rUrlPeaces = explode('/', $rUrl);
+            $rUrlPeaces = array_filter($rUrlPeaces, fn($p) => $p);
             $rUrlParams = [];
-            $urlParams = array_filter($urlPeaces, function ($peace) {
-                return str_starts_with($peace, '$');
-            });
 
-            if (count($urlParams) && count($urlPeaces) === count($rUrlPeaces)) {
+
+            $urlParams = [];
+            foreach ($urlPeaces as $peaceKey => $peace) {
+                if (str_starts_with($peace, '$') && isset($rUrlPeaces[$peaceKey])) {
+                    $urlParams[$peaceKey] = $peace;
+                    $rUrlParams[] = $rUrlPeaces[$peaceKey];
+                }
+            }
+
+            if (count($urlParams) && count($rUrlParams) && count($urlPeaces) === count($rUrlPeaces)) {
                 $offset = (count($urlPeaces) - count($urlParams)) - 1;
                 $rUrl = implode('/', array_slice($rUrlPeaces, $offset));
                 $url = implode('/', array_slice($rUrlPeaces, $offset));
-                $rUrlParams = array_slice($rUrlPeaces, (count($rUrlPeaces) - count($urlParams)), count($urlParams));
             }
 
             if ($url === $rUrl) {
+                $this->requests[$key]->setUriParams($rUrlParams);
                 $response = (new RequestHandler($handler, $this->middlewares[$key] ?? [], $rUrlParams))->handle($this->requests[$key]);
-                (new ResponseHandler($response))->handle();
             }
-
         }
+
+        (new ResponseHandler($response))->handle();
     }
 }

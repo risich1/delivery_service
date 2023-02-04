@@ -8,7 +8,7 @@ use App\Interface\IRequest;
 
 class RequestHandler {
 
-    private array $middleware = [];
+    private array $middleware;
     private $callable;
     private array $params;
 
@@ -19,20 +19,16 @@ class RequestHandler {
     }
 
     public function handle(IRequest $request): Response {
-//        try {
-//            $request->validate();
-//            return ($this->callable)($this->processMiddleware($request), ...$this->params);
-//        } catch (\Exception $e) {
-//            return new Response(['error' => $e->getMessage()], [], $e->getCode());
-//        } catch (\Error $e) {
-//            return new Response(['error' => $e->getMessage()], [], $e->getCode());
-//        }
-
-        $request->validate();
-        return ($this->callable)($this->processMiddleware($request), ...$this->params);
+        try {
+            $request->validate();
+            return ($this->callable)($this->processMiddleware($request), ...$this->params);
+        } catch (\Exception $e) {
+            $status = in_array($e->getCode(), Response::getStatuses()) ? $e->getCode() : Response::HTTP_SERVER_ERROR_CODE;
+            return new Response(['error' => $e->getMessage()], [], $status);
+        }
     }
 
-    protected function processMiddleware(IRequest $request): null|Response|IRequest {
+    protected function processMiddleware(IRequest $request): IRequest {
         $chain = $this->buildMiddlewareChain();
         $resultRequest = $request;
         if ($chain instanceof Middleware) {
@@ -48,8 +44,8 @@ class RequestHandler {
         }
 
         $middlewareChain = false;
-        foreach ($this->middleware as $index => $middleware) {
-            if ($index === 0) {
+        foreach ($this->middleware as $middleware) {
+            if (!$middlewareChain) {
                 $middlewareChain = $middleware;
             } else {
                 $middlewareChain->setNext($middleware);

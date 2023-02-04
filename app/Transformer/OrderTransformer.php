@@ -2,52 +2,46 @@
 
 namespace App\Transformer;
 
-
 use App\Entity\Order;
-use App\Repository\AddressRepository;
-use App\Repository\ProductRepository;
-use App\Repository\UserRepository;
+use App\Service\OrderService;
 
 class OrderTransformer {
 
-    protected UserRepository $userRepository;
-    protected ProductRepository $productRepository;
-    protected AddressRepository $addressRepository;
+    protected UserTransformer $userTransformer;
+    protected AddressTransformer $addressTransformer;
+    protected ProductTransformer $productTransformer;
+    protected OrderService $orderService;
 
-    public function __construct(UserRepository $userRepository, ProductRepository $productRepository, AddressRepository $addressRepository)
-    {
-        $this->addressRepository = $addressRepository;
-        $this->productRepository = $productRepository;
-        $this->userRepository = $userRepository;
+    public function __construct(
+        UserTransformer $userTransformer,
+        AddressTransformer $addressTransformer,
+        ProductTransformer $productTransformer,
+        OrderService $orderService,
+    ) {
+        $this->orderService = $orderService;
+        $this->userTransformer = $userTransformer;
+        $this->addressTransformer = $addressTransformer;
+        $this->productTransformer = $productTransformer;
     }
 
-    public function transform(array|Order $response): array|Order {
-
-        $productIds = [];
-        $addressIds = [];
-
-        if (is_array($response)) {
-            foreach ($response as $entity) {
-                $productIds =  array_merge($productIds, $entity->getProducts());
-                $addressIds = array_merge($addressIds, [$entity->getAddressAId(), $entity->getAddressBId()]);
-            }
-        } else {
-            $productIds =  array_merge($productIds, $response->getProducts());
-            $addressIds = array_merge($addressIds, [$response->getAddressAId(), $response->getAddressBId()]);
+    public function transform(array|Order $response): array {
+        $responseForWork = is_array($response) ? $response : [$response];
+        $childEntitiesCollection = $this->orderService->getChildEntitiesCollection($responseForWork);
+        foreach ($responseForWork as $index => &$order) {
+            $childEntities = $childEntitiesCollection[$index];
+            $order = [
+                'id' => $order->getId(),
+                'status' => $order->getStatus(),
+                'addressA' => $this->addressTransformer->transform($childEntities['addressA']),
+                'addressB' => $this->addressTransformer->transform($childEntities['addressB']),
+                'products' => $this->productTransformer->transform($childEntities['products']),
+                'seller' => $this->userTransformer->transform($childEntities['seller']),
+                'customer' => $this->userTransformer->transform($childEntities['customer']),
+                'courier' => $this->userTransformer->transform($childEntities['courier'])
+            ];
         }
 
-        $products = $this->productRepository->find([
-            ['id', 'IN', $productIds]
-        ]);
-
-        $address = $this->productRepository->find([
-            ['id', 'IN', $addressIds]
-        ]);
-
-
-        return [
-
-        ];
+        return !is_array($response) ? array_shift($responseForWork) : $responseForWork;
     }
 
 }

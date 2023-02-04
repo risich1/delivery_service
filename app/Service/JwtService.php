@@ -28,14 +28,14 @@ class JwtService {
         return JWT::encode($data, $_ENV['JWT_SECRET'], 'HS256');
     }
 
-    public static function validateJWT(string $jwt): bool|User {
+    public static function validateJWT(string $jwt): bool|array {
         $key = new Key($_ENV['JWT_SECRET'], 'HS256');
         $token = JWT::decode($jwt, $key);
         $now = new DateTimeImmutable();
         $nowT = $now->getTimestamp();
         $invalidToken = $token->iss != $_ENV['PROJECT_NAME'] || $token->nbf > $nowT || $token->exp < $nowT;
 
-        return !$invalidToken ? new User((array) $token->user): false;
+        return !$invalidToken ? (array) $token->user : false;
     }
 
 }

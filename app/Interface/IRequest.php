@@ -16,4 +16,9 @@ interface IRequest {
 
     public function getUri(): string;
 
+    public function getClientIp(): string;
+
+    public function getUriParams(): array;
+
+    public function setUriParams(array $uriParams): void;
 }

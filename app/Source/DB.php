@@ -17,6 +17,7 @@ class DB implements ISource
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
+
         $this->pdo = new PDO($dsn, $user, $password, $opt);
     }
 
@@ -29,17 +30,12 @@ class DB implements ISource
         return $this->pdo->query($query);
     }
 
-    public function get(string $query, array $conditions = []): array {
+    public function get(string $query, array $conditions = [], string $groupBy = ''): array {
         $query = $this->buildQueryWithConditions($query, $conditions);
-        $stmt = $this->pdo->query($query);
-        $result = [];
-
-        while ($row = $stmt->fetch())
-        {
-            $result[] = $row;
+        if ($groupBy) {
+            $query .= "GROUP BY $groupBy";
         }
-
-        return $result;
+        return $this->pdo->query($query)->fetchAll() ?? [];
     }
 
     protected function buildQueryWithConditions(string $query, array $conditions): string {
@@ -50,15 +46,15 @@ class DB implements ISource
                     $query .= ' AND ';
                 }
                 if (isset($condition[0], $condition[1], $condition[2])) {
-                    $value = "'$condition[2]'";
                     if (is_array($condition[2])) {
                         $valueArray = $condition[2];
-                        foreach ($valueArray as &$item) {
+                        foreach ($valueArray as $key2 => &$item) {
                             $item = "'$item'";
                         }
                         $value = '(' . implode(',', $valueArray) . ')';
+                    } else {
+                        $value = "'$condition[2]'";
                     }
-
                     $query .= "$condition[0] $condition[1] $value";
                 }
             }
@@ -75,50 +71,35 @@ class DB implements ISource
         }
         return substr($set, 0, -2);
     }
-//
-//    protected function pdoSetMulti(array $data): string {
-//
-//        foreach ($data as $key => $dat) {
-//           $res = [];
-//
-//           foreach ($dat as $datKey => $v) {
-//              $res["$datKey"]
-//           }
-//        }
-//    }
 
-    public function create(string $table, array $data): int|null {
-        $sql = "INSERT INTO $table SET ".$this->pdoSet($data);
-//        if (is_array($data[0])) {
-//            $sql = "INSERT INTO $table ({implode(',', $data[0])}) VALUES ";
-//
-//            foreach ($data as $key => $dat) {
-//                $iValues = array_values($dat);
-//                foreach ($iValues as &$iValue) {
-//                    $iValue = "'$iValue'";
-//                }
-//                $iValues = implode(',', $iValues);
-//                $sql .= "( $iValues )";
-//
-//                if ($key < count($data) - 1) {
-//                    $sql .= ', ';
-//                }
-//            }
-//        }
+    public function createBatch(string $table, array $data): int {
+        $columns = implode(',', array_keys($data[0]));
+        $place_holder = '(' . implode(',', array_fill(0, count($data[0]), '?')) . ')';
+        $place_holders = implode(',', array_fill(0, count($data), $place_holder));
+        $flat = call_user_func_array('array_merge', array_map('array_values', $data));
+        $this->pdo->beginTransaction();
+        $stm = $this->pdo->prepare("INSERT INTO {$table} ({$columns}) VALUES {$place_holders}");
+        $stm->execute($flat);
+        $insertId = $this->pdo->lastInsertId();
+        $this->pdo->commit();
+        return $insertId;
+    }
 
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute(array_values($data));
-        return $this->pdo->lastInsertId();
+    public function create(string $table, array $data): int {
+        return $this->createBatch($table, [$data]);
     }
 
     public function update(string $table, array $data, array $conditions = []): void {
-        $query = "UPDATE $table SET ".$this->pdoSet($data);
+        $query = "UPDATE $table SET ". $this->pdoSet($data);
 
         if ($conditions) {
             $query = $this->buildQueryWithConditions($query, $conditions);
         }
+
+        $this->pdo->beginTransaction();
         $stm = $this->pdo->prepare($query);
         $stm->execute(array_values($data));
+        $this->pdo->commit();
     }
 
     public function delete(string $table, array $conditions)
