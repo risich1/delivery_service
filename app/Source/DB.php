@@ -48,7 +48,8 @@ class DB implements ISource
                 if (isset($condition[0], $condition[1], $condition[2])) {
                     if (is_array($condition[2])) {
                         $valueArray = $condition[2];
-                        foreach ($valueArray as $key2 => &$item) {
+                        foreach ($valueArray as &$item) {
+                            $item = is_string($item) ? str_replace("`","``",$item) : $item;
                             $item = "'$item'";
                         }
                         $value = '(' . implode(',', $valueArray) . ')';

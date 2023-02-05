@@ -19,8 +19,10 @@
         "psr/http-server-middleware": "^1.0",
         "psr/http-message": "^1.0",
         "fakerphp/faker": "^1.21",
-        "symfony/rate-limiter": "^6.2",
         "nikolaposa/rate-limit": "^3.0",
         "ext-redis": "*"
+    },
+    "require-dev": {
+        "phpunit/dbunit": "^2.0"
     }
 }

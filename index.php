@@ -47,7 +47,7 @@ $getAllOrderHandler = function (AuthRequest $request) use ($orderService, $short
 };
 
 $createOrderHandler = function (CreateOrderRequest $request) use ($orderService) {
-    $orderService->createOrder($request->getBody());
+    $orderService->createOrder($request->getUser(), $request->getBody());
     return new Response('Order created', [], Response::HTTP_CREATED_CODE);
 };
 
