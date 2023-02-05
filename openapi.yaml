@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Delivery API
+  description: ''
+  version: v1
+servers:
+  - url: 'http://localhost:8000'
+    description: Local api.
+security:
+  - BearerAuth: []
+paths:
+  /api/v1/order:
+    get:
+      responses:
+        '200':
+          description: List of orders.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderListItem'
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '201':
+          description: Order has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/BadRequestError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/order/{order}:
+    get:
+      parameters:
+        - in: path
+          name: order
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Order detail info.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/BadRequestError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/TooManyRequestsError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFoundError'
+
+  /api/v1/order/calculate:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address_a_id:
+                  type: integer
+                  description: seller's address
+                address_b_id:
+                  type: integer
+                  description: customer's address
+      responses:
+        '200':
+          description: Calculated cost
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cost:
+                    type: integer
+                    description: Calculated cost
+
+  /api/v1/order/{order}/courier:
+    put:
+      parameters:
+        - in: path
+          name: order
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courier_id:
+                  type: integer
+                  description: Courier id
+      responses:
+        '200':
+          description: Order has been handed to courier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/BadRequestError'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/TooManyRequestsError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFoundError'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateOrder:
+      type: object
+      properties:
+        seller_id:
+          type: number
+          description: Seller id.
+        customer_id:
+          type: number
+          description: Customer id.
+        address_b_id:
+          type: number
+          required: true
+          description: Customer's address
+        cost:
+          type: number
+          required: true
+          description: Delivery cost
+        products:
+          type: array
+          description: Product ids
+          required: true
+          items:
+            type: number
+            required: true
+    Order:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Order id
+        status:
+          type: string
+          description: Order status
+        addressA:
+          type: object
+          description: Seller's address
+          properties:
+            schema:
+              $ref: '#/components/schemas/Address'
+        addressB:
+          type: object
+          description: Customer's address
+          properties:
+            schema:
+              $ref: '#/components/schemas/Address'
+        products:
+          type: array
+          description: Order products
+          items:
+            $ref: '#/components/schemas/Product'
+        seller:
+          type: object
+          description: Seller
+          properties:
+            schema:
+              $ref: '#/components/schemas/User'
+        customer:
+          type: object
+          description: Customer
+          properties:
+            schema:
+              $ref: '#/components/schemas/User'
+        courier:
+          type: object
+          description: Courier
+          properties:
+            schema:
+              $ref: '#/components/schemas/User'
+
+    OrderListItem:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Order id
+        status:
+          type: string
+          description: Order status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message to display to user.
+    Address:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message
+  responses:
+    ServerSideError:
+      description: If an error happened on the server side during request processing it returns standard error response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequestsError:
+      description: It will be happen if user pass too many requests to endpoint
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequestError:
+      description: This response is returned if the request has incorrect format. It might me missing parameters or fields, bad syntax, invalid values.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: Not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+
+
+
+

@@ -53,7 +53,7 @@ $createOrderHandler = function (CreateOrderRequest $request) use ($orderService)
 
 $calculateOrderHandler = function (CalculateOrderRequest $request) use ($orderService) {
     $body = $request->getBody();
-    return new Response(['cost' => $orderService->calculateCost($body['point_a'], $body['point_b'])]);
+    return new Response(['cost' => $orderService->calculateCost($request->getUser(), $body['address_a_id'], $body['address_b_id'])]);
 };
 
 $migrateHandler = function () use ($container) {
@@ -71,14 +71,14 @@ $sendToCourierHandler = function (SendOrderToCourierRequest $request, int $id) u
     return new Response('Order has been handed');
 };
 
-$router->put('/api/order/$id/courier', $sendToCourierHandler, [$rateLimitMiddleware, $authMiddleware], new SendOrderToCourierRequest);
-$router->get('/api/migrate', $migrateHandler, [], new Request);
-$router->get('/api/seed', $seedHandler, [], new Request);
-$router->post('/api/order/calculate', $calculateOrderHandler,  [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
-$router->get('/api/order', $getAllOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
-$router->get('/api/order/$id', $getOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
-$router->post('/api/order', $createOrderHandler, [$rateLimitMiddleware, $authMiddleware], new CreateOrderRequest);
-$router->post('/api/login', $loginHandler, [$rateLimitMiddleware], new LoginRequest);
+$router->put('/api/v1/order/$id/courier', $sendToCourierHandler, [$rateLimitMiddleware, $authMiddleware], new SendOrderToCourierRequest);
+$router->get('/api/v1/migrate', $migrateHandler, [], new Request);
+$router->get('/api/v1/seed', $seedHandler, [], new Request);
+$router->post('/api/v1/order/calculate', $calculateOrderHandler,  [$rateLimitMiddleware, $authMiddleware], new CalculateOrderRequest);
+$router->get('/api/v1/order', $getAllOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
+$router->get('/api/v1/order/$id', $getOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
+$router->post('/api/v1/order', $createOrderHandler, [$rateLimitMiddleware, $authMiddleware], new CreateOrderRequest);
+$router->post('/api/v1/login', $loginHandler, [$rateLimitMiddleware], new LoginRequest);
 
 $router->run();
 

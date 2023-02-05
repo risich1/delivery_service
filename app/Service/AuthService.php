@@ -26,8 +26,16 @@ class AuthService {
         return JwtService::generateJWT($user);
     }
 
+    /**
+     * @throws InvalidAuthException
+     */
     public function checkJwtAuth(string $token): bool|User {
-        $validationResult = JwtService::validateJWT($token);
+        try {
+            $validationResult = JwtService::validateJWT($token);
+        } catch (\Exception $e) {
+            throw new InvalidAuthException($e->getMessage());
+        }
+
         if (!(int) $validationResult['id']) {
             return false;
         }

@@ -2,8 +2,6 @@
 
 namespace App\Entity;
 
-use ReflectionClass;
-
 class User extends Entity {
 
     public const CUSTOMER_ROLE = 'customer',

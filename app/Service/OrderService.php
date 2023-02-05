@@ -33,8 +33,8 @@ class OrderService {
         $this->productRepository = $productRepository;
     }
 
-    public function calculateCost(int $pointA, int $pointB): int {
-        return rand(1, 10);
+    public function calculateCost(User $user, int $pointA, int $pointB): int {
+        return rand(1, 20);
     }
 
     /**
