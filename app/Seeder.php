@@ -2,9 +2,11 @@
 
 namespace App;
 
+use App\Entity\Order;
 use App\Entity\User;
 use App\Interface\ISource;
 use Faker\Factory;
+use App\Repository\OrderRepository;
 
 class Seeder {
 
@@ -50,6 +52,68 @@ class Seeder {
         $this->db->createBatch('addresses', $addresses);
         $this->db->createBatch('users', $users);
         $this->db->createBatch('products', $products);
+
+        $orders = [
+                [
+                    'seller_id' => 1,
+                    'customer_id' => 7,
+                    'courier_id' => 5,
+                    'address_a_id' => 1,
+                    'address_b_id' => 6,
+                    'products' => [1, 2],
+                    'status' => 'handed_courier',
+                    'cost' => 10
+                ],
+                [
+                    'seller_id' => 1,
+                    'customer_id' => 8,
+                    'address_a_id' => 1,
+                    'address_b_id' => 7,
+                    'products' => [3, 4],
+                    'cost' => 8
+                ],
+                [
+                    'seller_id' => 1,
+                    'customer_id' => 9,
+                    'address_a_id' => 1,
+                    'address_b_id' => 4,
+                    'products' => [7, 1],
+                    'cost' => 5
+                ],
+                [
+                    'seller_id' => 2,
+                    'customer_id' => 8,
+                    'address_a_id' => 1,
+                    'address_b_id' => 6,
+                    'products' => [3, 2],
+                    'cost' => 10
+                ],
+                [
+                    'seller_id' => 2,
+                    'customer_id' => 9,
+                    'address_a_id' => 1,
+                    'address_b_id' => 7,
+                    'products' => [8, 4],
+                    'cost' => 8
+                ],
+                [
+                    'seller_id' => 2,
+                    'customer_id' => 7,
+                    'courier_id' => 4,
+                    'address_a_id' => 1,
+                    'address_b_id' => 5,
+                    'products' => [7, 2],
+                    'status' => 'handed_courier',
+                    'cost' => 15
+                ],
+            ];
+
+        $orderRepository = new OrderRepository($this->db);
+
+        foreach ($orders as $order) {
+            $orderRepository->createOrder(new Order($order));
+        }
+
     }
 
 }

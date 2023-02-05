@@ -70,7 +70,7 @@ class OrderService {
         $userIds = [];
 
         foreach ($orderCollection as $order) {
-            $productIds = array_merge($productIds, [$order->getCourierId(), $order->getCustomerId(), $order->getSellerId()]);
+            $productIds = array_merge($productIds, $order->getProducts());
             $addressIds = array_merge($addressIds, [$order->getAddressAId(), $order->getAddressBId()]);
             $userIds = array_merge($userIds, [$order->getCourierId(), $order->getCustomerId(), $order->getSellerId()]);
         }
