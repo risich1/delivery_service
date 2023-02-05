@@ -7,7 +7,7 @@ use App\Http\Request\CalculateOrderRequest;
 use App\Http\Request\CreateOrderRequest;
 use App\Http\Request\LoginRequest;
 use App\Http\Request\Request;
-use App\Http\Request\SendOrderToCourierRequest;
+use App\Http\Request\HandOrderToCourierRequest;
 use App\Http\Response\Response;
 use App\Http\Router\Router;
 use App\Migration;
@@ -66,19 +66,20 @@ $seedHandler = function () use ($container) {
     return new Response('Seeded');
 };
 
-$sendToCourierHandler = function (SendOrderToCourierRequest $request, int $id) use ($orderService) {
+$sendToCourierHandler = function (HandOrderToCourierRequest $request, int $id) use ($orderService) {
     $orderService->handOrderToCourier($id, $request->getUser(), $request->getBody()['courier_id']);
     return new Response('Order has been handed');
 };
 
-$router->put('/api/v1/order/$id/courier', $sendToCourierHandler, [$rateLimitMiddleware, $authMiddleware], new SendOrderToCourierRequest);
-$router->get('/api/v1/migrate', $migrateHandler, [], new Request);
-$router->get('/api/v1/seed', $seedHandler, [], new Request);
+$router->put('/api/v1/order/$id/courier', $sendToCourierHandler, [$rateLimitMiddleware, $authMiddleware], new HandOrderToCourierRequest);
 $router->post('/api/v1/order/calculate', $calculateOrderHandler,  [$rateLimitMiddleware, $authMiddleware], new CalculateOrderRequest);
 $router->get('/api/v1/order', $getAllOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
 $router->get('/api/v1/order/$id', $getOrderHandler, [$rateLimitMiddleware, $authMiddleware], new AuthRequest);
 $router->post('/api/v1/order', $createOrderHandler, [$rateLimitMiddleware, $authMiddleware], new CreateOrderRequest);
 $router->post('/api/v1/login', $loginHandler, [$rateLimitMiddleware], new LoginRequest);
+
+$router->get('/migrate', $migrateHandler, [], new Request);
+$router->get('/seed', $seedHandler, [], new Request);
 
 $router->run();
 

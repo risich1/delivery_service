@@ -6,6 +6,7 @@ use App\Entity\Entity;
 use App\Entity\Order;
 use App\Entity\User;
 use App\Exceptions\BadRequestException;
+use App\Exceptions\NotAllowedException;
 use App\Exceptions\NotFoundException;
 use App\Repository\AddressRepository;
 use App\Repository\OrderRepository;
@@ -39,8 +40,13 @@ class OrderService {
 
     /**
      * @throws BadRequestException
+     * @throws NotAllowedException
      */
-    public function createOrder(array $data): void {
+    public function createOrder(User $user, array $data): void {
+        if (!in_array($user->getUrole(), [User::SELLER_ROLE, User::CUSTOMER_ROLE])) {
+            throw new NotAllowedException;
+        }
+
         $seller = $this->userRepository->getById($data['seller_id']);
         $customer = $this->userRepository->getById($data['customer_id']);
 
@@ -122,8 +128,13 @@ class OrderService {
     /**
      * @throws NotFoundException
      * @throws BadRequestException
+     * @throws NotAllowedException
      */
     public function handOrderToCourier(int $orderId, User $seller, int $courierId): void {
+        if ($seller->getUrole() !== User::SELLER_ROLE) {
+            throw new NotAllowedException;
+        }
+
         $courier = $this->userRepository->getById($courierId);
         $order = $this->repository->getByRole($seller->getId(), $seller->getUrole(), $orderId);
 

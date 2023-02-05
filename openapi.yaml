@@ -6,11 +6,37 @@ info:
 servers:
   - url: 'http://localhost:8000'
     description: Local api.
-security:
-  - BearerAuth: []
 paths:
+  /api/v1/login:
+    post:
+      responses:
+        '200':
+          description: Bearer token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone:
+                  type: string
+                  required: true
+                password:
+                  type: string
+                  required: true
+
+
   /api/v1/order:
     get:
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: List of orders.
@@ -21,6 +47,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/OrderListItem'
     post:
+      security:
+        - BearerAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -39,6 +67,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/responses/BadRequestError'
+        '403':
+          description: Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotAllowedError'
         '429':
           description: Too many requests
           content:
@@ -48,6 +82,8 @@ paths:
 
   /api/v1/order/{order}:
     get:
+      security:
+        - BearerAuth: [ ]
       parameters:
         - in: path
           name: order
@@ -82,6 +118,8 @@ paths:
 
   /api/v1/order/calculate:
     post:
+      security:
+        - BearerAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -108,6 +146,8 @@ paths:
 
   /api/v1/order/{order}/courier:
     put:
+      security:
+        - BearerAuth: [ ]
       parameters:
         - in: path
           name: order
@@ -148,6 +188,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/responses/NotFoundError'
+        '403':
+          description: Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotAllowedError'
 components:
   securitySchemes:
     BearerAuth:
@@ -286,6 +332,12 @@ components:
             $ref: '#/components/schemas/Error'
     NotFoundError:
       description: Not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotAllowedError:
+      description: Not allowed.
       content:
         application/json:
           schema:

@@ -7,6 +7,7 @@ class Response {
     const HTTP_CREATED_CODE = 201,
           HTTP_NOT_FOUND_CODE = 404,
           HTTP_BAD_REQUEST = 400,
+          HTTP_NOT_ALLOWED = 403,
           HTTP_UNAUTHORIZED_CODE = 401,
           HTTP_TOO_MANY_REQUESTS_CODE = 429,
           HTTP_METHOD_NOT_ALLOWED_CODE = 405,
