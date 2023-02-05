@@ -1,6 +1,6 @@
 Как развернуть проект:
  
-1. docker-compose up - приложение будет доступно по адресу localhost:8000
+1. docker-compose up - приложение будет доступно по адресу localhost:8000  и docker-compose exec php composer install
 
 
 2. сделать get запросы на ендпоинты /migrate и /seed (выполнятся миграции и заполнение базы стартовыми данными)
