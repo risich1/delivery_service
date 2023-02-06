@@ -38,7 +38,8 @@ class Response {
             self::HTTP_TOO_MANY_REQUESTS_CODE,
             self::HTTP_METHOD_NOT_ALLOWED_CODE,
             self::HTTP_SERVER_ERROR_CODE,
-            self::HTTP_SUCCESS_CODE
+            self::HTTP_SUCCESS_CODE,
+            self::HTTP_NOT_ALLOWED
         ];
     }
 
