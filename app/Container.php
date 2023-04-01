@@ -2,8 +2,11 @@
 
 namespace App;
 
+use App\Http\Handlers\Controller\AuthController;
+use App\Http\Handlers\Controller\OrderController;
 use App\Http\Handlers\Middleware\AuthMiddleware;
 use App\Http\Handlers\Middleware\RateLimitMiddleware;
+use App\Interface\IContainer;
 use App\Repository\AddressRepository;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
@@ -21,7 +24,7 @@ use App\Transformer\UserTransformer;
 use App\Source\DB;
 use Redis;
 
-class Container
+class Container implements IContainer
 {
 
     private array $objects;
@@ -47,18 +50,24 @@ class Container
             ),
             'service.auth' => fn() => new AuthService($this->get('repository.user')),
             'service.http' => fn() => new HttpService($this->get('redis')),
-            'transformer.user' => fn() => new UserTransformer(),
-            'transformer.address' => fn() => new AddressTransformer(),
-            'transformer.product' => fn() => new ProductTransformer(),
-            'transformer.order_short' => fn() => new ShortOrderTransformer(),
+            'transformer.user' => fn() => new UserTransformer,
+            'transformer.address' => fn() => new AddressTransformer,
+            'transformer.product' => fn() => new ProductTransformer,
+            'transformer.order_short' => fn() => new ShortOrderTransformer,
             'transformer.order' => fn() => new OrderTransformer(
                 $this->get('transformer.user'),
                 $this->get('transformer.address'),
                 $this->get('transformer.product'),
                 $this->get('service.order'),
             ),
-            'middleware.auth' => fn() => new AuthMiddleware($this->get('service.auth')),
+            'middleware.auth' => fn()  => new AuthMiddleware($this->get('service.auth')),
             'middleware.rate_limit' => fn() => new RateLimitMiddleware($this->get('service.http')),
+            'controller.order' => fn() => new OrderController(
+                $this->get('service.order'),
+                $this->get('transformer.order'),
+                $this->get('transformer.order_short')
+            ),
+            'controller.auth' => fn() => new AuthController($this->get('service.auth'))
         ];
     }
 

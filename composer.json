@@ -23,6 +23,6 @@
         "ext-redis": "*"
     },
     "require-dev": {
-        "phpunit/dbunit": "^2.0"
+        "phpunit/phpunit": "^10"
     }
 }

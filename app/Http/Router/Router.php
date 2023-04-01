@@ -72,8 +72,9 @@ class Router {
             }
 
             if ($url === $rUrl) {
-                $this->requests[$key]->setUriParams($rUrlParams);
-                $response = (new RequestHandler($handler, $this->middlewares[$key] ?? [], $rUrlParams))->handle($this->requests[$key]);
+                $request = new $this->requests[$key];
+                $request->setUriParams($rUrlParams);
+                $response = (new RequestHandler($handler, $this->middlewares[$key] ?? [], $rUrlParams))->handle($request);
             }
         }
 
