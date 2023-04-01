@@ -16,6 +16,15 @@ class Request implements IRequest {
     protected string $clientIp;
     protected array $uriParams;
 
+    public function __construct()
+    {
+        $this->headers = getallheaders();
+        $this->method = $_SERVER['REQUEST_METHOD'];
+        $this->body = json_decode(file_get_contents('php://input'), TRUE) ?? [];
+        $this->requestUri = $_SERVER['REQUEST_URI'];
+        $this->clientIp = $_SERVER['REMOTE_ADDR'];
+    }
+
     /**
      * @return array
      */
@@ -30,15 +39,6 @@ class Request implements IRequest {
     public function setUriParams(array $uriParams): void
     {
         $this->uriParams = $uriParams;
-    }
-
-    public function __construct()
-    {
-        $this->headers = getallheaders();
-        $this->method = $_SERVER['REQUEST_METHOD'];
-        $this->body = json_decode(file_get_contents('php://input'), TRUE) ?? [];
-        $this->requestUri = $_SERVER['REQUEST_URI'];
-        $this->clientIp = $_SERVER['REMOTE_ADDR'];
     }
 
     /**

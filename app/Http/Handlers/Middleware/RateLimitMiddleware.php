@@ -8,11 +8,7 @@ use App\Service\HttpService;
 
 class RateLimitMiddleware extends Middleware {
 
-    protected HttpService $http;
-
-    public function __construct(HttpService $http) {
-        $this->http = $http;
-    }
+    public function __construct(protected HttpService $http) {}
 
     /**
      * @throws RateExceededException

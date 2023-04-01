@@ -8,11 +8,7 @@ use App\Repository\UserRepository;
 
 class AuthService {
 
-    protected UserRepository $repository;
-
-    public function __construct(UserRepository $repository) {
-        $this->repository = $repository;
-    }
+    public function __construct(protected UserRepository $repository) {}
 
     /**
      * @throws InvalidAuthException
@@ -41,11 +37,8 @@ class AuthService {
         }
 
         $user = $this->repository->getById($validationResult['id']);
-        if (is_null($user)) {
-            return false;
-        }
 
-        return $user;
+        return is_null($user) ? false : $user;
     }
 
 }

@@ -7,12 +7,7 @@ use JetBrains\PhpStorm\NoReturn;
 
 class ResponseHandler {
 
-    protected Response $response;
-
-    public function __construct(Response $response)
-    {
-        $this->response = $response;
-    }
+    public function __construct(protected Response $response) {}
 
     #[NoReturn]
      public function handle(): string {

@@ -2,7 +2,6 @@
 
 namespace App;
 
-use App\Container;
 use App\Http\Request\AuthRequest;
 use App\Http\Request\CalculateOrderRequest;
 use App\Http\Request\CreateOrderRequest;

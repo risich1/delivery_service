@@ -8,15 +8,7 @@ use App\Interface\IRequest;
 
 class RequestHandler {
 
-    private array $middleware;
-    private $callable;
-    private array $params;
-
-    public function __construct(callable $callable, array $middleware = [], array $params = []) {
-        $this->middleware = $middleware;
-        $this->callable = $callable;
-        $this->params = $params;
-    }
+    public function __construct(protected \Closure $callable, protected array $middleware = [], protected array $params = []) {}
 
     public function handle(IRequest $request): Response {
         try {
